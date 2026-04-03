@@ -10,22 +10,22 @@ import (
 )
 
 type AuthorizeInput struct {
-	OrderID string
+	OrderID int
 	Amount  int64
 }
 
 type AuthorizeOutput struct {
-	PaymentID     string
-	OrderID       string
-	TransactionID string
+	PaymentID     int
+	OrderID       int
+	TransactionID int
 	Amount        int64
 	Status        string
 }
 
 type GetByOrderIDOutput struct {
-	PaymentID     string
-	OrderID       string
-	TransactionID string
+	PaymentID     int
+	OrderID       int
+	TransactionID int
 	Amount        int64
 	Status        string
 	CreatedAt     time.Time
@@ -52,12 +52,10 @@ func (uc *paymentUseCase) Authorize(input AuthorizeInput) (*AuthorizeOutput, err
 		CreatedAt: time.Now().UTC(),
 	}
 
-	// Domain-level invariant check
 	if err := p.Validate(); err != nil {
 		return nil, fmt.Errorf("validation error: %w", err)
 	}
 
-	// Business rule: payment limit
 	if domain.IsDeclined(input.Amount) {
 		p.TransactionID = ""
 		p.Status = domain.StatusDeclined
@@ -79,7 +77,6 @@ func (uc *paymentUseCase) Authorize(input AuthorizeInput) (*AuthorizeOutput, err
 	}, nil
 }
 
-// GetByOrderID retrieves a payment record by its associated order ID.
 func (uc *paymentUseCase) GetByOrderID(orderID string) (*GetByOrderIDOutput, error) {
 	p, err := uc.repo.FindByOrderID(orderID)
 	if err != nil {

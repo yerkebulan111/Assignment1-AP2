@@ -5,7 +5,6 @@ import (
 	"time"
 )
 
-// Order statuses
 const (
 	StatusPending   = "Pending"
 	StatusPaid      = "Paid"
@@ -13,56 +12,56 @@ const (
 	StatusCancelled = "Cancelled"
 )
 
-// Order is the core domain entity. It must not depend on HTTP, JSON, or any framework.
 type Order struct {
-	ID         string
-	CustomerID string
-	ItemName   string
-	Amount     int64 // Amount in cents (e.g., 1000 = $10.00). Never float64.
-	Status     string
-	CreatedAt  time.Time
+	ID             string
+	CustomerID     string
+	ItemName       string
+	Amount         int64
+	Status         string
+	CreatedAt      time.Time
+	IdempotencyKey string
 }
 
-// Validate enforces Order invariants.
+var (
+	ErrInvalidAmount    = errors.New("amount must be greater than 0")
+	ErrInvalidCustomer  = errors.New("customer_id must not be empty")
+	ErrInvalidItemName  = errors.New("item_name must not be empty")
+	ErrOrderNotFound    = errors.New("order not found")
+	ErrCannotCancel     = errors.New("only Pending orders can be cancelled")
+	ErrAlreadyCancelled = errors.New("order is already cancelled")
+)
+
 func (o *Order) Validate() error {
+	if o.Amount <= 0 {
+		return ErrInvalidAmount
+	}
 	if o.CustomerID == "" {
-		return errors.New("customer_id is required")
+		return ErrInvalidCustomer
 	}
 	if o.ItemName == "" {
-		return errors.New("item_name is required")
-	}
-	if o.Amount <= 0 {
-		return errors.New("amount must be greater than 0")
+		return ErrInvalidItemName
 	}
 	return nil
 }
 
-// MarkPaid transitions order to Paid status.
-func (o *Order) MarkPaid() error {
-	if o.Status != StatusPending {
-		return errors.New("only pending orders can be marked as paid")
-	}
-	o.Status = StatusPaid
-	return nil
-}
-
-// MarkFailed transitions order to Failed status.
-func (o *Order) MarkFailed() error {
-	if o.Status != StatusPending {
-		return errors.New("only pending orders can be marked as failed")
-	}
-	o.Status = StatusFailed
-	return nil
-}
-
-// Cancel transitions order to Cancelled status.
 func (o *Order) Cancel() error {
 	if o.Status == StatusPaid {
-		return errors.New("paid orders cannot be cancelled")
+		return ErrCannotCancel
+	}
+	if o.Status == StatusCancelled {
+		return ErrAlreadyCancelled
 	}
 	if o.Status != StatusPending {
-		return errors.New("only pending orders can be cancelled")
+		return ErrCannotCancel
 	}
 	o.Status = StatusCancelled
 	return nil
+}
+
+func (o *Order) MarkPaid() {
+	o.Status = StatusPaid
+}
+
+func (o *Order) MarkFailed() {
+	o.Status = StatusFailed
 }

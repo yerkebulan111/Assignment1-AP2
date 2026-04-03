@@ -1,18 +1,17 @@
 package domain
 
-import "context"
-
 type OrderRepository interface {
-	Save(ctx context.Context, order *Order) error
-	FindByID(ctx context.Context, id string) (*Order, error)
-	Update(ctx context.Context, order *Order) error
+	Save(order *Order) error
+	FindByID(id string) (*Order, error)
+	Update(order *Order) error
+	FindByIdempotencyKey(key string) (*Order, error)
 }
 
-type PaymentResponse struct {
+type PaymentResult struct {
 	TransactionID string
 	Status        string
 }
 
 type PaymentClient interface {
-	AuthorizePayment(ctx context.Context, orderID string, amount int64) (*PaymentResponse, error)
+	Authorize(orderID string, amount int64) (*PaymentResult, error)
 }
