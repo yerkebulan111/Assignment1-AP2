@@ -5,6 +5,7 @@ type OrderRepository interface {
 	FindByID(id string) (*Order, error)
 	Update(order *Order) error
 	FindByIdempotencyKey(key string) (*Order, error)
+	FindByCustomerID(customerID string) ([]*Order, error)
 }
 
 type PaymentResult struct {

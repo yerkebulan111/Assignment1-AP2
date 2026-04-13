@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -34,6 +35,16 @@ type CreateOrderOutput struct {
 }
 
 func (uc *OrderUseCase) CreateOrder(input CreateOrderInput) (*CreateOrderOutput, error) {
+	if input.IdempotencyKey != "" {
+		existing, err := uc.repo.FindByIdempotencyKey(input.IdempotencyKey)
+		if err == nil && existing != nil {
+			return &CreateOrderOutput{Order: existing, PaymentStatus: existing.Status}, nil
+		}
+		if err != nil && !errors.Is(err, domain.ErrOrderNotFound) {
+			return nil, fmt.Errorf("idempotency check failed: %w", err)
+		}
+	}
+
 	order := &domain.Order{
 		ID:         uuid.New().String(),
 		CustomerID: input.CustomerID,
@@ -43,15 +54,12 @@ func (uc *OrderUseCase) CreateOrder(input CreateOrderInput) (*CreateOrderOutput,
 		CreatedAt:  time.Now().UTC(),
 	}
 
-	if err := order.Validate(); err != nil {
-		return nil, fmt.Errorf("validation failed: %w", err)
+	if input.IdempotencyKey != "" {
+		order.IdempotencyKey = input.IdempotencyKey
 	}
 
-	if input.IdempotencyKey != "" {
-		existing, err := uc.repo.FindByIdempotencyKey(input.IdempotencyKey)
-		if err == nil && existing != nil {
-			return &CreateOrderOutput{Order: existing, PaymentStatus: existing.Status}, nil
-		}
+	if err := order.Validate(); err != nil {
+		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
 	if err := uc.repo.Save(order); err != nil {
@@ -104,4 +112,12 @@ func (uc *OrderUseCase) CancelOrder(id string) (*domain.Order, error) {
 	}
 
 	return order, nil
+}
+
+// customer id
+func (uc *OrderUseCase) GetOrdersByCustomer(customerID string) ([]*domain.Order, error) {
+	if customerID == "" {
+		return nil, fmt.Errorf("customer_id is required")
+	}
+	return uc.repo.FindByCustomerID(customerID)
 }

@@ -20,7 +20,7 @@ func NewPostgresOrderRepository(db *sql.DB) domain.OrderRepository {
 func (r *postgresOrderRepository) Save(order *domain.Order) error {
 	query := `
 		INSERT INTO orders (id, customer_id, item_name, amount, status, created_at, idempotency_key)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		VALUES ($1, $2, $3, $4, $5, $6, NULLIF($7, ''))
 	`
 	_, err := r.db.Exec(query,
 		order.ID,
@@ -39,7 +39,7 @@ func (r *postgresOrderRepository) Save(order *domain.Order) error {
 
 func (r *postgresOrderRepository) FindByID(id string) (*domain.Order, error) {
 	query := `
-		SELECT id, customer_id, item_name, amount, status, created_at
+		SELECT id, customer_id, item_name, amount, status, created_at, idempotency_key
 		FROM orders WHERE id = $1
 	`
 	row := r.db.QueryRow(query, id)
@@ -47,14 +47,7 @@ func (r *postgresOrderRepository) FindByID(id string) (*domain.Order, error) {
 	order := &domain.Order{}
 	var createdAt time.Time
 
-	err := row.Scan(
-		&order.ID,
-		&order.CustomerID,
-		&order.ItemName,
-		&order.Amount,
-		&order.Status,
-		&createdAt,
-	)
+	err := row.Scan(&order.ID, &order.CustomerID, &order.ItemName, &order.Amount, &order.Status, &createdAt, &order.IdempotencyKey)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, domain.ErrOrderNotFound
@@ -88,22 +81,14 @@ func (r *postgresOrderRepository) FindByIdempotencyKey(key string) (*domain.Orde
 		return nil, errors.New("empty idempotency key")
 	}
 	query := `
-		SELECT id, customer_id, item_name, amount, status, created_at
+		SELECT id, customer_id, item_name, amount, status, created_at, idempotency_key
 		FROM orders WHERE idempotency_key = $1
 	`
 	row := r.db.QueryRow(query, key)
 
 	order := &domain.Order{}
 	var createdAt time.Time
-
-	err := row.Scan(
-		&order.ID,
-		&order.CustomerID,
-		&order.ItemName,
-		&order.Amount,
-		&order.Status,
-		&createdAt,
-	)
+	err := row.Scan(&order.ID, &order.CustomerID, &order.ItemName, &order.Amount, &order.Status, &createdAt, &order.IdempotencyKey)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, domain.ErrOrderNotFound
@@ -112,4 +97,37 @@ func (r *postgresOrderRepository) FindByIdempotencyKey(key string) (*domain.Orde
 	}
 	order.CreatedAt = createdAt
 	return order, nil
+}
+
+// customer id
+
+func (r *postgresOrderRepository) FindByCustomerID(customerID string) ([]*domain.Order, error) {
+	query := `
+		SELECT id, customer_id, item_name, amount, status, created_at
+		FROM orders WHERE customer_id = $1
+		ORDER BY created_at DESC
+	`
+	rows, err := r.db.Query(query, customerID)
+	if err != nil {
+		return nil, fmt.Errorf("postgresOrderRepository.FindByCustomerID: %w", err)
+	}
+	defer rows.Close()
+
+	var orders []*domain.Order
+	for rows.Next() {
+		order := &domain.Order{}
+		var createdAt time.Time
+		if err := rows.Scan(
+			&order.ID, &order.CustomerID, &order.ItemName,
+			&order.Amount, &order.Status, &createdAt,
+		); err != nil {
+			return nil, fmt.Errorf("postgresOrderRepository.FindByCustomerID scan: %w", err)
+		}
+		order.CreatedAt = createdAt
+		orders = append(orders, order)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("postgresOrderRepository.FindByCustomerID rows: %w", err)
+	}
+	return orders, nil
 }

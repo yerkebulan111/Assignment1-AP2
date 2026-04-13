@@ -2,6 +2,7 @@ package http
 
 import (
 	"errors"
+	"log"
 	"net/http"
 
 	"order-service/internal/domain"
@@ -22,6 +23,7 @@ func (h *OrderHandler) RegisterRoutes(router *gin.Engine) {
 	router.POST("/orders", h.CreateOrder)
 	router.GET("/orders/:id", h.GetOrder)
 	router.PATCH("/orders/:id/cancel", h.CancelOrder)
+	router.GET("/orders", h.GetOrdersByCustomer)
 }
 
 type createOrderRequest struct {
@@ -63,6 +65,7 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 
 	output, err := h.uc.CreateOrder(input)
 	if err != nil {
+		log.Printf("ERROR IN CREATE ORDER: %v", err)
 		if isPaymentUnavailable(err) {
 			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "payment service unavailable"})
 			return
@@ -156,4 +159,25 @@ func containsSubstr(s, substr string) bool {
 		}
 	}
 	return false
+}
+
+// GET /orders?customer_id=some_user
+func (h *OrderHandler) GetOrdersByCustomer(c *gin.Context) {
+	customerID := c.Query("customer_id")
+	if customerID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "customer_id query parameter is required"})
+		return
+	}
+
+	orders, err := h.uc.GetOrdersByCustomer(customerID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	response := make([]orderResponse, 0, len(orders))
+	for _, o := range orders {
+		response = append(response, toOrderResponse(o))
+	}
+	c.JSON(http.StatusOK, response)
 }
