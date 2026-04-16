@@ -8,15 +8,21 @@ import (
 
 	_ "github.com/lib/pq"
 
+	"github.com/joho/godotenv"
+	_ "github.com/joho/godotenv"
 	"payment-service/internal/app"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("No .env file found")
+	}
 
 	dbHost := getEnv("DB_HOST", "localhost")
 	dbPort := getEnv("DB_PORT", "5432")
 	dbUser := getEnv("DB_USER", "postgres")
-	dbPassword := getEnv("DB_PASSWORD", "postgres")
+	dbPassword := getEnv("DB_PASSWORD", "password")
 	dbName := getEnv("DB_NAME", "payment_db")
 	serverPort := getEnv("SERVER_PORT", "8081")
 
@@ -35,7 +41,7 @@ func main() {
 		log.Fatalf("failed to ping database: %v", err)
 	}
 	log.Println("Connected to PostgreSQL successfully")
-	
+
 	router := app.NewRouter(db)
 
 	addr := fmt.Sprintf(":%s", serverPort)
