@@ -12,13 +12,13 @@ import (
 )
 
 type Config struct {
-	HTTPPort          string
-	DBHost            string
-	DBPort            string
-	DBUser            string
-	DBPassword        string
-	DBName            string
-	PaymentServiceURL string
+	HTTPPort        string
+	DBHost          string
+	DBPort          string
+	DBUser          string
+	DBPassword      string
+	DBName          string
+	PaymentGRPCAddr string
 }
 
 type Server struct {

@@ -10,22 +10,22 @@ import (
 )
 
 type AuthorizeInput struct {
-	OrderID int
+	OrderID string
 	Amount  int64
 }
 
 type AuthorizeOutput struct {
-	PaymentID     int
-	OrderID       int
-	TransactionID int
+	PaymentID     string
+	OrderID       string
+	TransactionID string
 	Amount        int64
 	Status        string
 }
 
 type GetByOrderIDOutput struct {
-	PaymentID     int
-	OrderID       int
-	TransactionID int
+	PaymentID     string
+	OrderID       string
+	TransactionID string
 	Amount        int64
 	Status        string
 	CreatedAt     time.Time
