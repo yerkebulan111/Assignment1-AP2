@@ -12,7 +12,6 @@
 | **Generated repo** | Auto-generated `.pb.go` files via GitHub Actions | [ap2-protos-gen](https://github.com/yerkebulan111/ap-2_protos-gen) |
 | **This repo** | Order & Payment service source code | [Assignment1-AP2](https://github.com/yerkebulan111/Assignment1-AP2.git)                                                |
 
-> Replace `YOUR_USERNAME` with your actual GitHub username.
 
 ---
 
