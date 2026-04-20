@@ -84,18 +84,6 @@ The system migrated internal service-to-service communication from REST to **gRP
                    (imported by both services)
 ```
 
-### What changed vs Assignment 1
-
-| Layer | Assignment 1 | Assignment 2 |
-|---|---|---|
-| External API (end user) | REST/Gin  | REST/Gin  (unchanged) |
-| Order → Payment call | HTTP JSON (`payment_client.go`) | **gRPC** (`payment_grpc_client.go`) |
-| Payment server | HTTP only | HTTP + **gRPC server** |
-| Contract | Implicit (JSON docs) | **Proto files** (strict typing) |
-| Order streaming |  None | **gRPC server-side stream** |
-| Error handling | `fmt.Errorf` | **`grpc/status` codes** |
-| Logging | None | **gRPC interceptor** (method + duration) |
-
 ---
 
 ## How to Run
@@ -110,8 +98,8 @@ Make sure you have installed:
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
-cd YOUR_REPO
+git clone https://github.com/yerkebulan111/Assignment1-AP2.git
+cd Assignment1-AP2
 ```
 
 ### 2. Set up databases
@@ -278,7 +266,7 @@ grpcurl -plaintext -d '{"order_id": "your-order-id"}' \
 
 ---
 
-## 🔗 Contract-First Flow
+## Contract-First Flow
 
 ```
 1. Write .proto file in [ap2-protos] repo
@@ -299,7 +287,7 @@ grpcurl -plaintext -d '{"order_id": "your-order-id"}' \
 
 ---
 
-## ⚙️ gRPC Services Defined
+## gRPC Services Defined
 
 ### PaymentService (`payment/payment.proto`)
 
