@@ -4,18 +4,14 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
-	"time"
 
 	"order-service/internal/app"
 	"order-service/internal/repository"
-	transportHttp "order-service/internal/transport/http"
+	grpcclient "order-service/internal/transport/grpc"
 	"order-service/internal/usecase"
 
 	"github.com/joho/godotenv"
-	_ "github.com/joho/godotenv"
-
 	_ "github.com/lib/pq"
 )
 
@@ -26,13 +22,13 @@ func main() {
 	}
 
 	cfg := app.Config{
-		HTTPPort:          getEnv("HTTP_PORT", "8080"),
-		DBHost:            getEnv("DB_HOST", "localhost"),
-		DBPort:            getEnv("DB_PORT", "5432"),
-		DBUser:            getEnv("DB_USER", "postgres"),
-		DBPassword:        getEnv("DB_PASSWORD", "postgres"),
-		DBName:            getEnv("DB_NAME", "orders_db"),
-		PaymentServiceURL: getEnv("PAYMENT_SERVICE_URL", "http://localhost:8081"),
+		HTTPPort:        getEnv("HTTP_PORT", "8080"),
+		DBHost:          getEnv("DB_HOST", "localhost"),
+		DBPort:          getEnv("DB_PORT", "5432"),
+		DBUser:          getEnv("DB_USER", "postgres"),
+		DBPassword:      getEnv("DB_PASSWORD", "postgres"),
+		DBName:          getEnv("DB_NAME", "orders_db"),
+		PaymentGRPCAddr: getEnv("PAYMENT_GRPC_ADDR", "localhost:50051"),
 	}
 
 	dsn := fmt.Sprintf(
@@ -51,11 +47,12 @@ func main() {
 	}
 	log.Println("Connected to PostgreSQL successfully")
 
-	log.Println("connected to PostgreSQL")
-
 	orderRepo := repository.NewPostgresOrderRepository(db)
-	httpClient := &http.Client{Timeout: 2 * time.Second}
-	paymentClient := transportHttp.NewPaymentHTTPClient(httpClient, cfg.PaymentServiceURL)
+	paymentClient, err := grpcclient.NewPaymentGRPCClient(cfg.PaymentGRPCAddr)
+	if err != nil {
+		log.Fatalf("failed to connect to payment gRPC: %v", err)
+	}
+
 	orderUseCase := usecase.NewOrderUseCase(orderRepo, paymentClient)
 	server := app.NewServer(cfg, db, orderUseCase)
 	if err := server.Run(); err != nil {

@@ -34,6 +34,7 @@ type GetByOrderIDOutput struct {
 type PaymentUseCase interface {
 	Authorize(input AuthorizeInput) (*AuthorizeOutput, error)
 	GetByOrderID(orderID string) (*GetByOrderIDOutput, error)
+	ListByAmountRange(min, max int64) ([]*AuthorizeOutput, error)
 }
 
 type paymentUseCase struct {
@@ -91,4 +92,28 @@ func (uc *paymentUseCase) GetByOrderID(orderID string) (*GetByOrderIDOutput, err
 		Status:        p.Status,
 		CreatedAt:     p.CreatedAt,
 	}, nil
+}
+
+func (uc *paymentUseCase) ListByAmountRange(min, max int64) ([]*AuthorizeOutput, error) {
+	if min > 0 && max > 0 && min > max {
+		return nil, fmt.Errorf("min_amount cannot be greater than max_amount")
+	}
+
+	payments, err := uc.repo.FindByAmountRange(min, max)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list payments: %w", err)
+	}
+
+	result := make([]*AuthorizeOutput, 0, len(payments))
+	for _, p := range payments {
+		result = append(result, &AuthorizeOutput{
+			PaymentID:     p.ID,
+			OrderID:       p.OrderID,
+			TransactionID: p.TransactionID,
+			Amount:        p.Amount,
+			Status:        p.Status,
+		})
+	}
+
+	return result, nil
 }
