@@ -6,10 +6,8 @@ import (
 )
 
 const (
-	StatusAuthorized = "Authorized"
-	StatusDeclined   = "Declined"
-
-	// MaxAllowedAmount: 100000 cents = $1000.00
+	StatusAuthorized       = "Authorized"
+	StatusDeclined         = "Declined"
 	MaxAllowedAmount int64 = 100000
 )
 

@@ -11,11 +11,9 @@ import (
 )
 
 func NewRouter(db *sql.DB) *gin.Engine {
-
 	repo := repository.NewPostgresPaymentRepository(db)
 	uc := usecase.NewPaymentUseCase(repo)
 	handler := httpdelivery.NewPaymentHandler(uc)
-
 	router := gin.Default()
 	handler.RegisterRoutes(router)
 

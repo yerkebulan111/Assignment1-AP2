@@ -10,6 +10,8 @@ import (
 	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
 
+	"github.com/joho/godotenv"
+	_ "github.com/joho/godotenv"
 	"payment-service/internal/app"
 	"payment-service/internal/repository"
 	grpcdelivery "payment-service/internal/transport/grpc"
@@ -22,7 +24,7 @@ func main() {
 	dbHost := getEnv("DB_HOST", "localhost")
 	dbPort := getEnv("DB_PORT", "5432")
 	dbUser := getEnv("DB_USER", "postgres")
-	dbPassword := getEnv("DB_PASSWORD", "postgres")
+	dbPassword := getEnv("DB_PASSWORD", "password")
 	dbName := getEnv("DB_NAME", "payment_db")
 	serverPort := getEnv("SERVER_PORT", "8081")
 	grpcPort := getEnv("GRPC_PORT", "50051")
@@ -42,6 +44,7 @@ func main() {
 		log.Fatalf("failed to ping database: %v", err)
 	}
 	log.Println("Connected to PostgreSQL successfully")
+
 
 	repo := repository.NewPostgresPaymentRepository(db)
 	uc := usecase.NewPaymentUseCase(repo)
