@@ -80,7 +80,7 @@ The system migrated internal service-to-service communication from REST to **gRP
                                              order.pb.go
                                              order_grpc.pb.go
                               ↓
-                   go get github.com/YOUR_USERNAME/ap2-protos-gen@v1.0.0
+                   go get github.com/yerkebulan111/ap2-protos-gen@v1.0.0
                    (imported by both services)
 ```
 
@@ -145,11 +145,11 @@ GRPC_PORT=50051
 ```bash
 # In both service directories
 cd order-service
-go get github.com/YOUR_USERNAME/ap2-protos-gen@v1.0.0
+go get github.com/yerkebulan111/ap-2_protos-gen@v1.0.0
 go mod tidy
 
 cd ../payment-service
-go get github.com/YOUR_USERNAME/ap2-protos-gen@v1.0.0
+go get github.com/yerkebulan111/ap-2_protos-gen@v1.0.0
 go mod tidy
 ```
 
@@ -226,12 +226,12 @@ grpcurl -plaintext -d '{"order_id": "your-order-id"}' \
 │   ├── internal/
 │   │   ├── app/app.go                 # Server wiring
 │   │   ├── domain/
-│   │   │   ├── order.go               # Order entity (UNCHANGED)
-│   │   │   └── ports.go               # PaymentClient interface (UNCHANGED)
-│   │   ├── repository/postgres.go     # DB layer (UNCHANGED)
-│   │   ├── usecase/order_usecase.go   # Business logic (UNCHANGED)
+│   │   │   ├── order.go               # Order entity 
+│   │   │   └── ports.go               # PaymentClient interface 
+│   │   ├── repository/postgres.go     # DB layer 
+│   │   ├── usecase/order_usecase.go   # Business logic 
 │   │   └── transport/
-│   │       ├── http/handler.go        # Gin REST handler (UNCHANGED)
+│   │       ├── http/handler.go        # Gin REST handler 
 │   │       └── grpc/
 │   │           └── payment_client.go  # NEW — gRPC client (replaces HTTP client)
 │   ├── proto/order.proto
@@ -242,17 +242,17 @@ grpcurl -plaintext -d '{"order_id": "your-order-id"}' \
     ├── cmd/payment-service/
     │   └── main.go                    # Entry point (starts gRPC + HTTP servers)
     ├── internal/
-    │   ├── app/app.go                 # HTTP router wiring (UNCHANGED)
+    │   ├── app/app.go                 # HTTP router wiring 
     │   ├── domain/
-    │   │   ├── payment.go             # Payment entity (UNCHANGED)
+    │   │   ├── payment.go             # Payment entity 
     │   │   └── repository.go          # Repository interface (+ FindByAmountRange)
     │   ├── repository/postgres.go     # DB layer (+ FindByAmountRange impl)
     │   ├── usecase/payment_usecase.go # Business logic (+ ListByAmountRange)
     │   └── transport/
-    │       ├── http/handler.go        # Gin REST handler (UNCHANGED)
+    │       ├── http/handler.go        # Gin REST handler 
     │       └── grpc/
     │           ├── server.go          # NEW — gRPC server (ProcessPayment, ListPayments)
-    │           └── interceptor.go     # NEW — logging interceptor (bonus)
+    │           └── interceptor.go     # NEW — logging interceptor 
     ├── proto/payment.proto
     ├── migrations/
     └── .env
@@ -269,20 +269,20 @@ grpcurl -plaintext -d '{"order_id": "your-order-id"}' \
 ## Contract-First Flow
 
 ```
-1. Write .proto file in [ap2-protos] repo
+1. Write .proto file in [ap-2_protos] repo
            │
            │  git push
            ▼
-2. GitHub Actions triggers on [ap2-protos-gen] repo
+2. GitHub Actions triggers on [ap-2_protos-gen] repo
            │
            │  protoc compiles .proto → .pb.go files
            ▼
-3. Generated .pb.go pushed to [ap2-protos-gen] repo
+3. Generated .pb.go pushed to [ap-2_protos-gen] repo
            │
            │  Create release tag v1.0.0
            ▼
 4. Services import via:
-   go get github.com/YOUR_USERNAME/ap2-protos-gen@v1.0.0
+   go get github.com/yerkebulan111/ap-2_protos-gen@v1.0.0
 ```
 
 ---
