@@ -7,7 +7,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
-	github.com/yerkebulan111/ap-2_protos-gen v1.0.0
+	github.com/yerkebulan111/ap-2_protos-gen v1.0.1
 	google.golang.org/grpc v1.80.0
 )
 

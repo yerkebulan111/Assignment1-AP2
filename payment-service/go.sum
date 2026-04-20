@@ -75,8 +75,8 @@ github.com/twitchyliquid64/golang-asm v0.15.1 h1:SU5vSMR7hnwNxj24w34ZyCi/FmDZTkS
 github.com/twitchyliquid64/golang-asm v0.15.1/go.mod h1:a1lVb/DtPvCB8fslRZhAngC2+aY1QWCk3Cedj/Gdt08=
 github.com/ugorji/go/codec v1.2.12 h1:9LC83zGrHhuUA9l16C9AHXAqEV/2wBQ4nkvumAE65EE=
 github.com/ugorji/go/codec v1.2.12/go.mod h1:UNopzCgEMSXjBc6AOMqYvWC1ktqTAfzJZUZgYf6w6lg=
-github.com/yerkebulan111/ap-2_protos-gen v1.0.0 h1:j1gTBe0gWVBJipumCLOJCyWnfrJ5Z+BDilrMrWwcAX8=
-github.com/yerkebulan111/ap-2_protos-gen v1.0.0/go.mod h1:uX+7Yfko4fV0Tq75m0R6ci+ypQR2NJiFKW0nkz6EeNw=
+github.com/yerkebulan111/ap-2_protos-gen v1.0.1 h1:ZC+74LX6U63MtHUcqpZjN6/fqSZgaOXerpPaylXMQZM=
+github.com/yerkebulan111/ap-2_protos-gen v1.0.1/go.mod h1:uX+7Yfko4fV0Tq75m0R6ci+ypQR2NJiFKW0nkz6EeNw=
 go.opentelemetry.io/auto/sdk v1.2.1 h1:jXsnJ4Lmnqd11kwkBV2LgLoFMZKizbCi5fNZ/ipaZ64=
 go.opentelemetry.io/auto/sdk v1.2.1/go.mod h1:KRTj+aOaElaLi+wW1kO/DZRXwkF4C5xPbEe3ZiIhN7Y=
 go.opentelemetry.io/otel v1.39.0 h1:8yPrr/S0ND9QEfTfdP9V+SiwT4E0G7Y5MO7p85nis48=

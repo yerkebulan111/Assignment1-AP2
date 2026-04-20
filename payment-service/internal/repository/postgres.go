@@ -71,3 +71,49 @@ func (r *postgresPaymentRepository) FindByOrderID(orderID string) (*domain.Payme
 	p.CreatedAt = createdAt
 	return &p, nil
 }
+
+func (r *postgresPaymentRepository) FindByAmountRange(min, max int64) ([]*domain.Payment, error) {
+	query := `SELECT id, order_id, transaction_id, amount, status, created_at FROM payments WHERE 1=1`
+	args := []interface{}{}
+	argIdx := 1
+
+	if min > 0 {
+		query += fmt.Sprintf(" AND amount >= $%d", argIdx)
+		args = append(args, min)
+		argIdx++
+	}
+
+	if max > 0 {
+		query += fmt.Sprintf(" AND amount <= $%d", argIdx)
+		args = append(args, max)
+		argIdx++
+	}
+
+	query += " ORDER BY created_at DESC"
+
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("FindByAmountRange query error: %w", err)
+	}
+	defer rows.Close()
+
+	var payments []*domain.Payment
+	for rows.Next() {
+		var p domain.Payment
+		var transactionID sql.NullString
+		var createdAt time.Time
+
+		if err := rows.Scan(
+			&p.ID, &p.OrderID, &transactionID,
+			&p.Amount, &p.Status, &createdAt,
+		); err != nil {
+			return nil, fmt.Errorf("FindByAmountRange scan error: %w", err)
+		}
+
+		p.TransactionID = transactionID.String
+		p.CreatedAt = createdAt
+		payments = append(payments, &p)
+	}
+
+	return payments, nil
+}
