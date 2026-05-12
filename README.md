@@ -30,10 +30,10 @@ The system migrated internal service-to-service communication from REST to **gRP
 ┌─────────────────────────────────────────────────────────────────────┐
 │                        ORDER SERVICE  :8080                         │
 │                                                                     │
-│   ┌─────────────────┐    ┌──────────────────┐    ┌──────────────┐  │
-│   │  Gin REST Layer │───▶│   Order UseCase  │───▶│  Order Repo  │  │
+│   ┌─────────────────┐    ┌──────────────────┐    ┌──────────────┐   │
+│   │  Gin REST Layer │───▶│   Order UseCase  │───▶│  Order Repo  │   │
 │   │   handler.go    │    │ order_usecase.go │    │ postgres.go  │  │
-│   └─────────────────┘    └────────┬─────────┘    └──────────────┘  │
+│   └─────────────────┘    └────────┬─────────┘    └──────────────┘   │
 │                                   │ domain.PaymentClient interface  │
 │                          ┌────────▼─────────┐                      │
 │                          │ PaymentGRPCClient│  (replaces HTTP       │
@@ -54,17 +54,17 @@ The system migrated internal service-to-service communication from REST to **gRP
 ┌─────────────────────────────────────────────────────────────────────┐
 │                       PAYMENT SERVICE  :8081                        │
 │                                                                     │
-│   ┌──────────────────┐   ┌───────────────────┐   ┌─────────────┐  │
-│   │ PaymentGRPCServer│──▶│ Payment UseCase   │──▶│ Payment Repo│  │
-│   │ + Interceptor    │   │payment_usecase.go │   │ postgres.go │  │
-│   │ server.go        │   │                   │   │             │  │
-│   └──────────────────┘   └───────────────────┘   └─────────────┘  │
+│   ┌──────────────────┐   ┌───────────────────┐   ┌─────────────┐    │
+│   │ PaymentGRPCServer│──▶│ Payment UseCase   │──▶│ Payment Repo│    │
+│   │ + Interceptor    │   │payment_usecase.go │   │ postgres.go │    │
+│   │ server.go        │   │                   │   │             │    │
+│   └──────────────────┘   └───────────────────┘   └─────────────┘    │ 
 │   (logs method+duration)                                            │
 │                                                                     │
-│   ┌──────────────────┐                                             │
-│   │  Gin REST Layer  │  (kept for direct HTTP access if needed)    │
-│   │   handler.go     │  port :8081                                 │
-│   └──────────────────┘                                             │
+│   ┌──────────────────┐                                              │
+│   │  Gin REST Layer  │  (kept for direct HTTP access if needed)     │
+│   │   handler.go     │  port :8081                                  │
+│   └──────────────────┘                                              │
 └─────────────────────────────────────────────────────────────────────┘
          │                                       │
          ▼                                       ▼
