@@ -1,39 +1,43 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
-	"order-service/internal/app"
 	"order-service/internal/repository"
 	grpcclient "order-service/internal/transport/grpc"
 	"order-service/internal/usecase"
 
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+
+	transporthttp "order-service/internal/transport/http"
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
+	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found")
 	}
 
-	cfg := app.Config{
-		HTTPPort:        getEnv("HTTP_PORT", "8080"),
-		DBHost:          getEnv("DB_HOST", "localhost"),
-		DBPort:          getEnv("DB_PORT", "5432"),
-		DBUser:          getEnv("DB_USER", "postgres"),
-		DBPassword:      getEnv("DB_PASSWORD", "postgres"),
-		DBName:          getEnv("DB_NAME", "orders_db"),
-		PaymentGRPCAddr: getEnv("PAYMENT_GRPC_ADDR", "localhost:50051"),
-	}
+	httpPort := getEnv("HTTP_PORT", "8080")
+	dbHost := getEnv("DB_HOST", "localhost")
+	dbPort := getEnv("DB_PORT", "5432")
+	dbUser := getEnv("DB_USER", "postgres")
+	dbPassword := getEnv("DB_PASSWORD", "postgres")
+	dbName := getEnv("DB_NAME", "orders_db")
+	paymentGRPCAddr := getEnv("PAYMENT_GRPC_ADDR", "localhost:50051")
 
 	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName,
+		dbHost, dbPort, dbUser, dbPassword, dbName,
 	)
 
 	db, err := sql.Open("postgres", dsn)
@@ -48,16 +52,42 @@ func main() {
 	log.Println("Connected to PostgreSQL successfully")
 
 	orderRepo := repository.NewPostgresOrderRepository(db)
-	paymentClient, err := grpcclient.NewPaymentGRPCClient(cfg.PaymentGRPCAddr)
+	paymentClient, err := grpcclient.NewPaymentGRPCClient(paymentGRPCAddr)
 	if err != nil {
 		log.Fatalf("failed to connect to payment gRPC: %v", err)
 	}
 
 	orderUseCase := usecase.NewOrderUseCase(orderRepo, paymentClient)
-	server := app.NewServer(cfg, db, orderUseCase)
-	if err := server.Run(); err != nil {
-		log.Fatalf("server error: %v", err)
+
+	router := gin.Default()
+	handler := transporthttp.NewOrderHandler(orderUseCase)
+	handler.RegisterRoutes(router)
+
+	srv := &http.Server{
+		Addr:    fmt.Sprintf(":%s", httpPort),
+		Handler: router,
 	}
+
+	go func() {
+		log.Printf("Order Service listening on :%s", httpPort)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Order service HTTP error: %v", err)
+		}
+	}()
+
+	// Graceful shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("[main] Shutdown signal received...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Printf("[main] Order service shutdown error: %v", err)
+	}
+	log.Println("[main] Order Service stopped gracefully.")
 }
 
 func getEnv(key, fallback string) string {
